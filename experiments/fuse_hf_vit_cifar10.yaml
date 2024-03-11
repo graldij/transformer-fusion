@@ -1,0 +1,93 @@
+# Model Parameters
+# - name_0     :                          | name of model 0 to fuse
+# - name_1     :                          | name of model 1 to fuse
+# - testloader :                          | dataloader that will be loaded
+# - dataset    : {id, sort, mnist, cifar} | name of the dataset
+# - type       : {full, vit, hf_vit}      | type of transformer
+model:
+  name_0: models/cifar10_model
+  name_1: models/cifar10_anchor
+
+  testloader:
+  dataset: cifar10
+  type: hf_vit
+
+# Fusion Parameters
+# - type           : {acts, wts}                            | activation or weight based fusion
+# - resid_policy   : {no_resid, only_resid, mean, weighted_scalar, weighted_matrix} | residual connection transportation map flow handling
+# - fuse_src_embed : {True, False}                          | enable source embedding fusion
+# - fuse_sa        : {True, False}                          | enable encoder self-attention fusion
+# - qk_fusion      : {separate, joint, eq_t_map}            | separate: algorithm computes separate transportation map for W_q and W_k fusion;
+#                                                           | joint: algorithm computes one transportation map that jointly aligns W_q and W_k;
+#                                                           | eq_t_map: algorithm computes one single transportation map that is used for both W_q and W_k fusion
+# - fuse_norm      : {True, False}                          | enable encoder norm fusion
+# - fuse_fc        : {True, False}                          | enable encoder fully connected fusion
+# - fuse_bias      : {True, False}                          | enable bias fusion
+# - fuse_gen       : {True, False}                          | enable generator fusion
+# - pca            : {True, False}                          | enable pca compression of activations
+# - pca_dim        : [1, acts*sentence_length]              | number of pca dimensions
+# - ot_solver      : {emd, sinkhorn, sinkhorn_for_widening} | set solver (default emd); sinkhorn_for_widening only uses sinkhorn for layers where the previous layer dimension was narrower than the dimension of the current layer
+# - sinkhorn_reg   : {float}                                | regularization parameter if the sinkhorn ot_solver is used
+# - gnd_metric
+#     - type     : {euclidiean, cosine, angual}   | Distance metric
+#     - norm     : {log, max, median, mean, none} | normalization type for ground metric
+#     - reg      : [-inf, +inf]                   | Regularization
+#     - squared  : {True, False}                  | square ground metric
+#     - clip     : {True, False}                  | clip ground metric
+#     - clip_min : [-inf, +inf]                   | clip minimum
+#     - clip_max : [-inf, +inf]                   | clip maximum
+#     - mem_eff  : {True, False}                  | compute ground metric memory efficient
+# - acts:
+#     - num_samples: [1,+inf]                  | number of samples to compute activation
+#     - seq_pos    : {-1, [0, len(seq)-1]}     | If -1, all activations from every position in the sequence will be used to calculate
+#                                              | the ground metric, else only the activations at position seq_pos will be used
+#     - seq_filter : {None, window_2, window_4, only_cls}  | If window_n: Only take the n x n center patches of the sequence;
+#                                                          | If only_cls: only class token is used as activation
+#     - loss_thres : {False, float}            | If a float is defined only samples are considered for activations that have a loss
+#                                              | that is lower than loss_thres in both models
+#     - pre_relu   : {True, False}             | safe pre activation value for ReLU layers
+#     - seed       : [-inf,+inf]               | seed for activation generation
+#     - mode       : {mean, std, meanstd, raw} | neuron importance calculation
+#     - std        : {True, False}             | standardize activations
+#     - center     : {True, False}             | center activations
+#     - norm       : {True, False}             | normalize activations
+# - wts:
+#     - norm: {True, False} | Normalization of weights for weight based fusion
+fusion:
+  num_models: 2
+  type: acts
+  resid_policy: mean
+  fuse_src_embed: True
+  fuse_sa: True
+  qk_fusion: separate
+  fuse_norm: True
+  fuse_fc: True
+  fuse_bias: True
+  fuse_gen: True
+  ot_solver: sinkhorn
+  sinkhorn_reg: 0.08 # optima 0.06 with wts and 0.08 with acts
+  gnd_metric:
+    type: euclidean
+    norm: max
+    reg: 0.01
+    mem_eff: True
+    squared: False
+    clip: False
+    clip_min: 5.0
+    clip_max: 0.0
+  acts:
+    num_samples: 200
+    seq_pos: -1
+    seq_filter: window_6
+    avg_seq_items: False
+    loss_thres: False
+    mode: raw
+    pre_relu: True
+    seed: 0
+    std: True
+    center: True
+    norm: True
+  wts:
+    norm: True
+regression:
+  only_eval_ot: False
