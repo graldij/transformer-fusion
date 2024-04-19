@@ -1,6 +1,6 @@
 # Transformer Fusion with Optimal Transport
 
-#### *Published as a conference paper at ICLR 2024*
+#### *Published as a [conference paper](https://openreview.net/pdf?id=LjeqMvQpen) at ICLR 2024*
 
 ### Moritz Imfeld*, Jacopo Graldi*, Marco Giordano*, Thomas Hofmann, Sotiris Anagnostidis and Sidak Pal Singh
 
